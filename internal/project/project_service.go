@@ -19,26 +19,21 @@ func NewProjectService(ProjectRepo ProjectRepository) ProjectService {
 }
 
 func (p *projectService) FindAll() ([]models.Project, error) {
-	//TODO implement me
-	panic("implement me")
+	return p.ProjectRepo.FindAll()
 }
 
 func (p *projectService) FindProjectByID(id int64) (*models.Project, error) {
-	//TODO implement me
-	panic("implement me")
+	return p.ProjectRepo.FindProjectByID(id)
 }
 
 func (p *projectService) CreateProject(project *models.Project) error {
-	//TODO implement me
-	panic("implement me")
+	return p.ProjectRepo.CreateProject(project)
 }
 
 func (p *projectService) UpdateProject(project *models.Project) error {
-	//TODO implement me
-	panic("implement me")
+	return p.ProjectRepo.UpdateProject(project)
 }
 
 func (p *projectService) DeleteProject(id int64) error {
-	//TODO implement me
-	panic("implement me")
+	return p.ProjectRepo.DeleteProject(id)
 }
