@@ -11,8 +11,8 @@ type AuthController struct {
 	AuthService AuthService
 }
 
-func NewAuthController(authService AuthService) AuthController {
-	return AuthController{
+func NewAuthController(authService AuthService) *AuthController {
+	return &AuthController{
 		AuthService: authService,
 	}
 }
@@ -22,12 +22,17 @@ func (a *AuthController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		utils.JSONErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
+			"status":  "error",
+			"message": err.Error()})
 		return
 	}
 
 	if err := a.AuthService.CreateUser(&user); err != nil {
-		utils.JSONErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
@@ -44,12 +49,18 @@ func (a *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
-		utils.JSONErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
 	if err := a.AuthService.Login(credentials.Email, credentials.Password); err != nil {
-		utils.JSONErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
@@ -63,7 +74,10 @@ func (a *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int64)
 
 	if err := a.AuthService.Logout(userID); err != nil {
-		utils.JSONErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
@@ -80,12 +94,18 @@ func (a *AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		utils.JSONErrorResponse(w, http.StatusBadRequest, err.Error())
+		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
 	if err := a.AuthService.ResetPassword(request.UserID, request.Password); err != nil {
-		utils.JSONErrorResponse(w, http.StatusInternalServerError, err.Error())
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": err.Error(),
+		})
 		return
 	}
 
