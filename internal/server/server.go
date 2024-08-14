@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"github.com/BerkatPS/internal/auth"
+	"github.com/BerkatPS/internal/project"
 	"github.com/BerkatPS/pkg/middleware"
 	"net/http"
 )
@@ -16,12 +17,15 @@ func NewServer(db *sql.DB) *Server {
 	router := http.NewServeMux()
 	s := &Server{
 		Router: router,
+		db:     db,
 	}
 
 	//router.Use(middleware.LoggingMiddleware)
 	//router.Use(middleware.RecoveryMiddleware)
 	//router.Use(middleware.CORSHandler)
 	//router.Use(middleware.AuthMiddleware)
+
+	s.registerRoutes()
 
 	router.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World"))
@@ -35,9 +39,13 @@ func (s *Server) registerRoutes() {
 	authRepo := auth.NewAuthRepository(s.db)
 	authService := auth.NewAuthService(authRepo)
 	authController := auth.NewAuthController(authService)
-	auth.RegisterRoutes(s.Router, &authController)
+	auth.RegisterRoutes(s.Router, authController)
 
 	// project routes
+	projectRepo := project.NewProjectRepository(s.db)
+	projectService := project.NewProjectService(projectRepo)
+	projectController := project.NewProjectController(projectService)
+	project.RegisterRoutes(s.Router, projectController)
 
 	// expenses routes
 
