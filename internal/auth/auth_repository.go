@@ -12,7 +12,7 @@ type AuthRepository interface {
 	UpdateUserToken(userID int64, token string) error      // Untuk menyimpan token refresh
 	FindUserByID(userID int64) (*models.User, error)       // Untuk mencari user berdasarkan ID
 	UpdatePassword(userID int64, newPassword string) error // Untuk mengupdate password user
-
+	ShowAllUsers() ([]models.User, error)
 }
 
 type authRepository struct {
@@ -21,6 +21,26 @@ type authRepository struct {
 
 func NewAuthRepository(db *sql.DB) AuthRepository {
 	return &authRepository{db}
+}
+
+func (r *authRepository) ShowAllUsers() ([]models.User, error) {
+
+	query := "SELECT id, username, email, password, role FROM users"
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Role); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
 }
 
 func (r *authRepository) UpdatePassword(userID int64, newPassword string) error {

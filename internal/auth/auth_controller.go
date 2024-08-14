@@ -17,6 +17,22 @@ func NewAuthController(authService AuthService) *AuthController {
 	}
 }
 
+func (a *AuthController) ShowAllUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := a.AuthService.ShowAllUsers()
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": err.Error(),
+		})
+		return
+	}
+	utils.JSONResponse(w, http.StatusOK, map[string]interface{}{
+		"status": "success",
+		"data":   users,
+	})
+
+}
+
 func (a *AuthController) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	var user models.User

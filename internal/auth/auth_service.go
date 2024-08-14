@@ -13,6 +13,7 @@ type AuthService interface {
 	Logout(userID int64) error
 	//RefreshToken(refreshToken string) (string, error)
 	ResetPassword(userID int64, newPassword string) error
+	ShowAllUsers() ([]models.User, error)
 }
 
 type authService struct {
@@ -21,6 +22,10 @@ type authService struct {
 
 func NewAuthService(Authrepo AuthRepository) AuthService {
 	return &authService{Authrepo}
+}
+
+func (a *authService) ShowAllUsers() ([]models.User, error) {
+	return a.Authrepo.ShowAllUsers()
 }
 
 func (a *authService) Logout(userID int64) error {
