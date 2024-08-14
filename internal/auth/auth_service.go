@@ -1,100 +1,88 @@
 package auth
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	models "github.com/BerkatPS/internal"
 	"github.com/BerkatPS/pkg/utils"
 )
 
+// AuthService defines the interface for authentication-related operations
 type AuthService interface {
-	FindUserByEmail(email string) (*models.User, error)
-	CreateUser(user *models.User) error
-	Login(email, password string) error
-	Logout(userID int64) error
-	//RefreshToken(refreshToken string) (string, error)
-	ResetPassword(userID int64, newPassword string) error
-	ShowAllUsers() ([]models.User, error)
+	FindUserByEmail(ctx context.Context, email string) (*models.User, error)
+	CreateUser(ctx context.Context, user *models.User) error
+	Login(ctx context.Context, email, password string) (string, error)
+	Logout(ctx context.Context, userID int64) error
+	ResetPassword(ctx context.Context, userID int64, newPassword string) error
+	ShowAllUsers(ctx context.Context) ([]models.User, error)
 }
 
 type authService struct {
-	Authrepo AuthRepository
+	AuthRepo AuthRepository
 }
 
-func NewAuthService(Authrepo AuthRepository) AuthService {
-	return &authService{Authrepo}
+// NewAuthService creates a new instance of AuthService
+func NewAuthService(AuthRepo AuthRepository) AuthService {
+	return &authService{AuthRepo}
 }
 
-func (a *authService) ShowAllUsers() ([]models.User, error) {
-	return a.Authrepo.ShowAllUsers()
+// ShowAllUsers retrieves all users from the repository
+func (a *authService) ShowAllUsers(ctx context.Context) ([]models.User, error) {
+	return a.AuthRepo.ShowAllUsers(ctx)
 }
 
-func (a *authService) Logout(userID int64) error {
-	return a.Authrepo.UpdateUserToken(userID, "")
+// Logout clears the user's token, effectively logging them out
+func (a *authService) Logout(ctx context.Context, userID int64) error {
+	return a.AuthRepo.UpdateUserToken(ctx, userID, "")
 }
 
-//func (a *authService) RefreshToken(refreshToken string) (string, error) {
-//	user, err := a.Authrepo.FindUserByID()
-//	if err != nil {
-//		return "", err
-//	}
-//	if user.RefreshToken != refreshToken {
-//		return "", fmt.Errorf("invalid refresh token")
-//	}
-//	//generate jwt token
-//	newtoken, err := utils.GenerateToken(int(user.ID))
-//	if err != nil {
-//		return "", fmt.Errorf("failed to generate Token: %v", err)
-//	}
-//	return newtoken, nil
-//}
-
-func (a *authService) ResetPassword(userID int64, newPassword string) error {
-
+// ResetPassword updates the user's password after hashing it
+func (a *authService) ResetPassword(ctx context.Context, userID int64, newPassword string) error {
 	hashedPassword, err := utils.HashPassword(newPassword)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %v", err)
 	}
-	return a.Authrepo.UpdatePassword(userID, hashedPassword)
+	return a.AuthRepo.UpdatePassword(ctx, userID, hashedPassword)
 }
 
-func (a *authService) Login(email, password string) error {
-	user, err := a.Authrepo.FindUserByEmail(email)
+// Login authenticates the user and returns a JWT token if successful
+func (a *authService) Login(ctx context.Context, email, password string) (string, error) {
+	user, err := a.AuthRepo.FindUserByEmail(ctx, email)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if !utils.CheckPasswordHash(password, user.Password) {
-		return fmt.Errorf("invalid password")
+		return "", fmt.Errorf("invalid password")
 	}
 
-	//generate jwt token
-	_, err = utils.GenerateToken(int(user.ID))
+	token, err := utils.GenerateToken(int(user.ID))
 	if err != nil {
-		return fmt.Errorf("failed to generate Token: %v", err)
+		return "", fmt.Errorf("failed to generate token: %v", err)
 	}
-	return nil
+	return token, nil
 }
 
-func (a *authService) FindUserByEmail(email string) (*models.User, error) {
-	user, err := a.Authrepo.FindUserByEmail(email)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+// FindUserByEmail retrieves a user by email from the repository
+func (a *authService) FindUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	return a.AuthRepo.FindUserByEmail(ctx, email)
 }
 
-func (a authService) CreateUser(user *models.User) error {
-
-	email, err := a.Authrepo.FindUserByEmail(user.Email)
-	if email != nil {
+// CreateUser creates a new user after checking if the email already exists
+func (a *authService) CreateUser(ctx context.Context, user *models.User) error {
+	existingUser, err := a.AuthRepo.FindUserByEmail(ctx, user.Email)
+	if existingUser != nil {
 		return fmt.Errorf("user with email %s already exists", user.Email)
-
 	}
+	if err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check existing user: %v", err)
+	}
+
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
-		return fmt.Errorf("failed to hash password: %v")
+		return fmt.Errorf("failed to hash password: %v", err)
 	}
 
 	user.Password = hashedPassword
-	return a.Authrepo.CreateUser(user)
+	return a.AuthRepo.CreateUser(ctx, user)
 }

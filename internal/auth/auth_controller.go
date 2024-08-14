@@ -7,47 +7,54 @@ import (
 	"net/http"
 )
 
+// AuthController handles HTTP requests related to authentication
 type AuthController struct {
 	AuthService AuthService
 }
 
+// NewAuthController creates a new AuthController instance
 func NewAuthController(authService AuthService) *AuthController {
 	return &AuthController{
 		AuthService: authService,
 	}
 }
 
+// ShowAllUsers retrieves all users and returns them in the response
 func (a *AuthController) ShowAllUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := a.AuthService.ShowAllUsers()
+	ctx := r.Context() // Get the context from the request
+
+	users, err := a.AuthService.ShowAllUsers(ctx)
 	if err != nil {
 		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
 			"status":  "error",
-			"message": err.Error(),
+			"message": "Failed to retrieve users: " + err.Error(),
 		})
 		return
 	}
+
 	utils.JSONResponse(w, http.StatusOK, map[string]interface{}{
 		"status": "success",
 		"data":   users,
 	})
-
 }
 
+// CreateUser creates a new user from the provided request data
 func (a *AuthController) CreateUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context() // Get the context from the request
 
 	var user models.User
-
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
 			"status":  "error",
-			"message": err.Error()})
+			"message": "Invalid request payload: " + err.Error(),
+		})
 		return
 	}
 
-	if err := a.AuthService.CreateUser(&user); err != nil {
+	if err := a.AuthService.CreateUser(ctx, &user); err != nil {
 		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
 			"status":  "error",
-			"message": err.Error(),
+			"message": "Failed to create user: " + err.Error(),
 		})
 		return
 	}
@@ -58,7 +65,9 @@ func (a *AuthController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Login authenticates a user and returns a JWT token if successful
 func (a *AuthController) Login(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context() // Get the context from the request
 
 	var credentials struct {
 		Email    string `json:"email"`
@@ -67,32 +76,44 @@ func (a *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
 		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
 			"status":  "error",
-			"message": err.Error(),
+			"message": "Invalid credentials payload: " + err.Error(),
 		})
 		return
 	}
 
-	if err := a.AuthService.Login(credentials.Email, credentials.Password); err != nil {
-		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+	token, err := a.AuthService.Login(ctx, credentials.Email, credentials.Password)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusUnauthorized, map[string]interface{}{
 			"status":  "error",
-			"message": err.Error(),
+			"message": "Authentication failed: " + err.Error(),
 		})
 		return
 	}
 
 	utils.JSONResponse(w, http.StatusOK, map[string]interface{}{
 		"status":  "success",
-		"message": "User logged in successfully",
+		"message": "Login successful",
+		"token":   token,
 	})
 }
 
+// Logout invalidates the user's session by clearing their token
 func (a *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int64)
+	ctx := r.Context() // Get the context from the request
 
-	if err := a.AuthService.Logout(userID); err != nil {
+	userID, ok := r.Context().Value("userID").(int64)
+	if !ok {
+		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
+			"status":  "error",
+			"message": "User ID not found in context",
+		})
+		return
+	}
+
+	if err := a.AuthService.Logout(ctx, userID); err != nil {
 		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
 			"status":  "error",
-			"message": err.Error(),
+			"message": "Failed to logout user: " + err.Error(),
 		})
 		return
 	}
@@ -103,7 +124,9 @@ func (a *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ResetPassword updates the user's password
 func (a *AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context() // Get the context from the request
 
 	var request struct {
 		UserID   int64  `json:"user_id"`
@@ -112,15 +135,15 @@ func (a *AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
 			"status":  "error",
-			"message": err.Error(),
+			"message": "Invalid reset password payload: " + err.Error(),
 		})
 		return
 	}
 
-	if err := a.AuthService.ResetPassword(request.UserID, request.Password); err != nil {
+	if err := a.AuthService.ResetPassword(ctx, request.UserID, request.Password); err != nil {
 		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
 			"status":  "error",
-			"message": err.Error(),
+			"message": "Failed to reset password: " + err.Error(),
 		})
 		return
 	}
