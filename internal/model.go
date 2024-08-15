@@ -23,8 +23,6 @@ type Project struct {
 	ID              int64            `json:"id"`
 	Name            string           `json:"name"`
 	Description     string           `json:"description"`
-	StartDate       time.Time        `json:"start_date"`
-	EndDate         time.Time        `json:"end_date"`
 	Budget          float64          `json:"budget"`
 	Status          string           `json:"status"`
 	ManagerID       int64            `json:"manager_id"`

@@ -48,7 +48,7 @@ func (p *projectService) FindProjectByID(ctx context.Context, id int64) (*models
 
 // CreateProject validates and creates a new project
 func (p *projectService) CreateProject(ctx context.Context, project *models.Project) error {
-	if project.Name == "" || project.StartDate.IsZero() || project.EndDate.IsZero() {
+	if project.Name == "" {
 		return errors.New("missing required project fields")
 	}
 
@@ -65,7 +65,7 @@ func (p *projectService) UpdateProject(ctx context.Context, project *models.Proj
 		return errors.New("invalid project ID")
 	}
 
-	if project.Name == "" || project.StartDate.IsZero() || project.EndDate.IsZero() {
+	if project.Name == "" {
 		return errors.New("missing required project fields")
 	}
 

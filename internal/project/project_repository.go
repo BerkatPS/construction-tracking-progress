@@ -26,7 +26,7 @@ func NewProjectRepository(db *sql.DB) ProjectRepository {
 
 // FindAll retrieves all projects from the database
 func (p *projectRepository) FindAll(ctx context.Context) ([]models.Project, error) {
-	query := "SELECT id, name, description, start_date, end_date, budget, status FROM projects"
+	query := "SELECT id, name, description, budget, status FROM projects"
 
 	rows, err := p.db.QueryContext(ctx, query)
 	if err != nil {
@@ -37,7 +37,7 @@ func (p *projectRepository) FindAll(ctx context.Context) ([]models.Project, erro
 	var projects []models.Project
 	for rows.Next() {
 		var project models.Project
-		if err := rows.Scan(&project.ID, &project.Name, &project.Description, &project.StartDate, &project.EndDate, &project.Budget, &project.Status); err != nil {
+		if err := rows.Scan(&project.ID, &project.Name, &project.Description, &project.Budget, &project.Status); err != nil {
 			return nil, err
 		}
 		projects = append(projects, project)
@@ -50,12 +50,12 @@ func (p *projectRepository) FindAll(ctx context.Context) ([]models.Project, erro
 
 // FindProjectByID retrieves a project by its ID from the database
 func (p *projectRepository) FindProjectByID(ctx context.Context, id int64) (*models.Project, error) {
-	query := "SELECT id, name, description, start_date, end_date, budget, status FROM projects WHERE id = $1"
+	query := "SELECT id, name, description, budget, status FROM projects WHERE id = $1"
 
 	row := p.db.QueryRowContext(ctx, query, id)
 
 	var project models.Project
-	if err := row.Scan(&project.ID, &project.Name, &project.Description, &project.StartDate, &project.EndDate, &project.Budget, &project.Status); err != nil {
+	if err := row.Scan(&project.ID, &project.Name, &project.Description, &project.Budget, &project.Status); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("project not found")
 		}
@@ -66,9 +66,9 @@ func (p *projectRepository) FindProjectByID(ctx context.Context, id int64) (*mod
 
 // CreateProject inserts a new project into the database
 func (p *projectRepository) CreateProject(ctx context.Context, project *models.Project) error {
-	query := "INSERT INTO projects (name, description, start_date, end_date, budget, status) VALUES ($1, $2, $3, $4, $5, $6)"
+	query := "INSERT INTO projects (name, description, budget, status) VALUES ($1, $2, $3, $4)"
 
-	_, err := p.db.ExecContext(ctx, query, project.Name, project.Description, project.StartDate, project.EndDate, project.Budget, project.Status)
+	_, err := p.db.ExecContext(ctx, query, project.Name, project.Description, project.Budget, project.Status)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (p *projectRepository) CreateProject(ctx context.Context, project *models.P
 func (p *projectRepository) UpdateProject(ctx context.Context, project *models.Project) error {
 	query := "UPDATE projects SET name = $1, description = $2, start_date = $3, end_date = $4, budget = $5, status = $6 WHERE id = $7"
 
-	_, err := p.db.ExecContext(ctx, query, project.Name, project.Description, project.StartDate, project.EndDate, project.Budget, project.Status, project.ID)
+	_, err := p.db.ExecContext(ctx, query, project.Name, project.Description, project.Budget, project.Status, project.ID)
 	if err != nil {
 		return err
 	}
