@@ -92,16 +92,15 @@ func (r *authRepository) UpdateUserToken(ctx context.Context, userID int64, toke
 
 // FindUserByEmail retrieves a user by their email
 func (r *authRepository) FindUserByEmail(ctx context.Context, email string) (*models.User, error) {
-	row := r.db.QueryRowContext(ctx, selectUserByEmailQuery, email)
-
-	user := &models.User{}
-	if err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Role); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("user not found")
+	var user models.User
+	err := r.db.QueryRowContext(ctx, "SELECT id, username, email, password, role FROM users WHERE email = $1", email).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Role)
+	if err != nil {
+		if err == sql.ErrNoRows { // Jika tidak ditemukan, kembalikan nil tanpa error
+			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to find user by email: %w", err)
+		return nil, fmt.Errorf("failed to query user by email: %w", err)
 	}
-	return user, nil
+	return &user, nil
 }
 
 // CreateUser adds a new user to the database

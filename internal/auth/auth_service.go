@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	models "github.com/BerkatPS/internal"
 	"github.com/BerkatPS/pkg/utils"
@@ -71,11 +70,11 @@ func (a *authService) FindUserByEmail(ctx context.Context, email string) (*model
 // CreateUser creates a new user after checking if the email already exists
 func (a *authService) CreateUser(ctx context.Context, user *models.User) error {
 	existingUser, err := a.AuthRepo.FindUserByEmail(ctx, user.Email)
+	if err != nil {
+		return fmt.Errorf("failed to check existing user: %v", err)
+	}
 	if existingUser != nil {
 		return fmt.Errorf("user with email %s already exists", user.Email)
-	}
-	if err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("failed to check existing user: %v", err)
 	}
 
 	hashedPassword, err := utils.HashPassword(user.Password)
