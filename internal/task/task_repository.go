@@ -12,10 +12,20 @@ type TaskRepository interface {
 	CreateTask(ctx context.Context, task *models.Task) error
 	UpdateTask(ctx context.Context, task *models.Task) error
 	DeleteTask(ctx context.Context, id int64) error
+	TaskMarkAsDone(ctx context.Context, id int64) error
 }
 
 type taskRepository struct {
 	db *sql.DB
+}
+
+func (t *taskRepository) TaskMarkAsDone(ctx context.Context, id int64) error {
+	query := "UPDATE tasks SET status = 'DONE' WHERE id = $1"
+	_, err := t.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewTaskRepository(db *sql.DB) TaskRepository {

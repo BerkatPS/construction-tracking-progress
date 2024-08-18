@@ -15,6 +15,33 @@ func NewTaskController(service TaskService) *TaskController {
 	return &TaskController{service}
 }
 
+func (t *TaskController) TaskMarkAsDone(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	taskID, err := utils.ParseInt64Param(r)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
+			"status":  "error",
+			"message": "Invalid task ID: " + err.Error(),
+		})
+		return
+	}
+
+	err = t.Service.TaskMarkAsDone(ctx, taskID)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": "Failed to mark task as done: " + err.Error(),
+		})
+		return
+	}
+
+	utils.JSONResponse(w, http.StatusOK, map[string]interface{}{
+		"status":  "success",
+		"message": "Task marked as done successfully",
+	})
+}
+
 func (t *TaskController) ShowAllTasks(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

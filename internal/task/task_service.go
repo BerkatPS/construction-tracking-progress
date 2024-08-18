@@ -12,10 +12,24 @@ type TaskService interface {
 	CreateTask(ctx context.Context, task *models.Task) error
 	UpdateTask(ctx context.Context, task *models.Task) error
 	DeleteTask(ctx context.Context, id int64) error
+	TaskMarkAsDone(ctx context.Context, id int64) error
 }
 
 type taskService struct {
 	TaskRepo TaskRepository
+}
+
+func (t *taskService) TaskMarkAsDone(ctx context.Context, id int64) error {
+
+	if id <= 0 {
+		return fmt.Errorf("invalid task ID")
+	}
+	err := t.TaskRepo.TaskMarkAsDone(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to mark task as done: %v", err)
+	}
+
+	return nil
 }
 
 func NewTaskService(taskRepo TaskRepository) TaskService {
