@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/BerkatPS/internal/auth"
 	"github.com/BerkatPS/internal/project"
+	"github.com/BerkatPS/internal/task"
 	"github.com/BerkatPS/pkg/middleware"
 	"net/http"
 )
@@ -60,6 +61,10 @@ func (s *Server) registerRoutes() {
 	// report routes
 
 	// Task Routes
+	taskRepo := task.NewTaskRepository(s.db)
+	taskService := task.NewTaskService(taskRepo)
+	taskController := task.NewTaskController(taskService)
+	task.RegisterRoutes(s.Router, taskController)
 
 	// Message Routes
 
