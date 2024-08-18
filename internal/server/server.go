@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/BerkatPS/internal/auth"
 	"github.com/BerkatPS/internal/project"
+	"github.com/BerkatPS/internal/quality"
 	"github.com/BerkatPS/internal/task"
 	"github.com/BerkatPS/pkg/middleware"
 	"net/http"
@@ -67,6 +68,12 @@ func (s *Server) registerRoutes() {
 	task.RegisterRoutes(s.Router, taskController)
 
 	// Message Routes
+
+	// quality Routes
+	qualityRepo := quality.NewQualityRepository(s.db)
+	qualityService := quality.NewQualityService(qualityRepo)
+	qualityController := quality.NewQualityController(qualityService)
+	quality.RegisterRoutes(s.Router, qualityController)
 
 }
 
