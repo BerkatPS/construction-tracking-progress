@@ -3,6 +3,7 @@ package quality
 import (
 	"context"
 	"fmt"
+	"time"
 	models "github.com/BerkatPS/internal"
 )
 
@@ -11,6 +12,12 @@ type QualityService interface {
 	CreateQuality(ctx context.Context, quality *models.QualityCheck) error
 	UpdateQuality(ctx context.Context, quality *models.QualityCheck) error
 	ShowQualityPerProject(ctx context.Context, projectID int64) ([]models.QualityCheck, error)
+	FindQualityByTaskID(ctx context.Context, taskID int64) ([]models.QualityCheck, error)
+	FindQualityByDateRange(ctx context.Context, startDate, endDate time.Time) ([]models.QualityCheck, error)
+	FindQualityIssues(ctx context.Context) ([]models.QualityCheck, error)
+	UpdateQualityStatus(ctx context.Context, id int64, status string) error
+	FindQualityChecksByInspector(ctx context.Context, inspectorID int64) ([]models.QualityCheck, error)
+	FindNonCompliantQualityChecks(ctx context.Context) ([]models.QualityCheck, error)
 }
 
 type qualityService struct {
@@ -21,7 +28,89 @@ func NewQualityService(qualityRepo QualityRepository) QualityService {
 	return &qualityService{qualityRepo}
 }
 
-func (q *qualityService) FindQualityByID(ctx context.Context, id int64) (*models.QualityCheck, error) {
+func (q *qualityService) FindQualityByTaskID(ctx context.Context, taskID int64) ([]models.QualityCheck, error) {
+	if taskID <= 0 {
+		return nil, fmt.Errorf("invalid task ID")
+	}
+	qualities, err := q.QualityRepo.FindQualityByTaskID(ctx, taskID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve quality: %v", err)
+	}
+	return qualities, nil
+}
+
+func (q *qualityService) FindQualityByDateRange(ctx context.Context, startDate, endDate time.Time) ([]models.QualityCheck, error) {
+	if startDate.IsZero() || endDate.IsZero() {
+		return nil, fmt.Errorf("invalid date range")
+	}
+
+	qualities, err := q.QualityRepo.FindQualityByDateRange(ctx, startDate, endDate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve quality: %v", err)
+	}
+
+	return qualities, nil
+}
+
+func (q *qualityService) FindQualityIssues(ctx context.Context) ([]models.QualityCheck, error) {
+	qualities, err := q.QualityRepo.FindQualityIssues(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve quality: %v", err)
+	}
+	return qualities, nil
+}
+
+func (q *qualityService) UpdateQualityStatus(ctx context.Context, id int64, status string) error {
+	if id <= 0 {
+		return fmt.Errorf("invalid quality ID")
+	}
+
+	if status == "" {
+		return fmt.Errorf("status cannot be empty")
+	}
+
+	err := q.QualityRepo.UpdateQualityStatus(ctx, id, status)
+	if err != nil {
+		return fmt.Errorf("failed to update quality: %v", err)
+	}
+
+	return nil
+}
+
+func (q *qualityService) FindQualityChecksByInspector(ctx context.Context, inspectorID int64) ([]models.QualityCheck, error) {
+	if inspectorID <= 0 {
+		return nil, fmt.Errorf("invalid inspector ID")
+	}
+
+	qualities, err := q.QualityRepo.FindQualityChecksByInspector(ctx, inspectorID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve quality: %v", err)
+	}
+	return qualities, nil
+
+}
+
+func (q *qualityService) FindNonCompliantQualityChecks(ctx context.Context) ([]models.QualityCheck, error) {
+	qualities, err := q.QualityRepo.FindNonCompliantQualityChecks(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve quality: %v", err)
+	}
+	return qualities, nil
+}
+
+func (q *qualityService) ShowQualityPerProject(ctx context.Context, projectID int64) ([]models.QualityCheck, error) {
+	if projectID <= 0 {
+		return nil, fmt.Errorf("invalid project ID")
+	}
+
+	qualities, err := q.QualityRepo.ShowQualityPerProject(ctx, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve quality: %v", err)
+	}
+	return qualities, nil
+}
+
+func (q *qualityService) FindQualityByID(ctx context.Context, id int64) (*models.QualityCheck, error)  {
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid quality ID")
 	}
@@ -30,8 +119,8 @@ func (q *qualityService) FindQualityByID(ctx context.Context, id int64) (*models
 		return nil, fmt.Errorf("failed to retrieve quality: %v", err)
 	}
 	return quality, nil
-
 }
+
 
 func (q *qualityService) CreateQuality(ctx context.Context, quality *models.QualityCheck) error {
 	if quality.Comments == "" {
@@ -94,16 +183,3 @@ func (q *qualityService) UpdateQuality(ctx context.Context, quality *models.Qual
 	return nil
 }
 
-func (q *qualityService) ShowQualityPerProject(ctx context.Context, projectID int64) ([]models.QualityCheck, error) {
-
-	if projectID <= 0 {
-		return nil, fmt.Errorf("invalid project ID")
-	}
-
-	qualities, err := q.QualityRepo.ShowQualityPerProject(ctx, projectID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve quality: %v", err)
-	}
-	return qualities, nil
-
-}
