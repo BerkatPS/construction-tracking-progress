@@ -15,6 +15,33 @@ func NewTaskController(service TaskService) *TaskController {
 	return &TaskController{service}
 }
 
+func (t *TaskController) FindTasksByProjectID (w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	projectID, err := utils.ParseInt64Param(r)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
+			"status":  "error",
+			"message": "Invalid project ID: " + err.Error(),
+		})
+		return
+	}
+
+	tasks, err := t.Service.FindTasksByProjectID(ctx, projectID)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": "Failed to retrieve tasks for project: " + err.Error(),
+		})
+		return
+	}
+
+	utils.JSONResponse(w, http.StatusOK, map[string]interface{}{
+		"status":  "success",
+		"message": "Tasks found successfully",
+		"data":    tasks,
+	})
+}
 
 func (t *TaskController) TaskMarkAsInProgress(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

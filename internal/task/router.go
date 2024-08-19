@@ -13,4 +13,5 @@ func RegisterRoutes(router *http.ServeMux, handler *TaskController) {
 	router.HandleFunc("GET /tasks/overdue", handler.FindOverdueTasks)
 	router.HandleFunc("GET /tasks/user/{user_id}", handler.FindTasksByAssignedUser)
 	router.HandleFunc("PUT /tasks/archive", handler.ArchiveCompletedTasks)
+	router.HandleFunc("GET /tasks/project/{project_id}", handler.FindTasksByProjectID)
 }

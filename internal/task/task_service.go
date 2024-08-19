@@ -17,6 +17,7 @@ type TaskService interface {
 	TaskMarkAsInProgress(ctx context.Context, id int64) error
 	FindTasksByAssignedUser(ctx context.Context, userID int64) ([]models.Task, error)
 	FindOverdueTasks(ctx context.Context) ([]models.Task, error)
+	FindTasksByProjectID(ctx context.Context, projectID int64) ([]models.Task, error)
 }
 
 type taskService struct {
@@ -26,6 +27,15 @@ type taskService struct {
 
 func NewTaskService(taskRepo TaskRepository) TaskService {
 	return &taskService{taskRepo}
+}
+
+func (t *taskService) FindTasksByProjectID(ctx context.Context, projectID int64) ([]models.Task, error) {
+	tasks, err := t.TaskRepo.FindTasksByProjectID(ctx, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve tasks for project: %v", err)
+	}
+
+	return tasks, nil
 }
 
 func (t *taskService) FindOverdueTasks(ctx context.Context) ([]models.Task, error) {

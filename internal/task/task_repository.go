@@ -9,6 +9,7 @@ import (
 type TaskRepository interface {
 	ShowAllTasks(ctx context.Context) ([]models.Task, error)
 	FindTaskByID(ctx context.Context, id int64) (*models.Task, error)
+	FindTasksByProjectID(ctx context.Context, projectID int64) ([]models.Task, error)
 	CreateTask(ctx context.Context, task *models.Task) error
 	UpdateTask(ctx context.Context, task *models.Task) error
 	DeleteTask(ctx context.Context, id int64) error
@@ -27,6 +28,28 @@ type taskRepository struct {
 func NewTaskRepository(db *sql.DB) TaskRepository {
 	return &taskRepository{db}
 }
+
+func (t *taskRepository) FindTasksByProjectID(ctx context.Context, projectID int64) ([]models.Task, error) {
+	query := "SELECT * FROM tasks WHERE project_id = $1"
+
+	rows, err := t.db.QueryContext(ctx, query, projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tasks []models.Task
+	for rows.Next() {
+		var task models.Task
+		if err := rows.Scan(&task.ID, &task.ProjectID, &task.Name, &task.Description, &task.StartDate, &task.EndDate, &task.Status); err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}
+
 
 func (t *taskRepository) FindOverdueTasks(ctx context.Context) ([]models.Task, error) {
 	query := "SELECT * FROM tasks WHERE end_date < CURRENT_DATE AND status = 'IN_PROGRESS'"
