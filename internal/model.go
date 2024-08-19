@@ -115,3 +115,20 @@ type Report struct {
 	Project      *Project  `json:"project"` // Many-to-One
 	Creator      *User     `json:"creator"` // Many-to-One
 }
+
+type QualityReport struct {
+	ID                int64            `json:"id"`
+	ProjectID         int64            `json:"project_id"`
+	InspectorID       int64            `json:"inspector_id"`
+	GeneratedByID     int64            `json:"generated_by_id"`
+	GeneratedBy       *User            `json:"generated_by"` // Many-to-One
+	Project           *Project         `json:"project"`      // Many-to-One
+	Inspector         *User            `json:"inspector"`    // Many-to-One
+	StartDate         time.Time        `json:"start_date"`
+	EndDate           time.Time        `json:"end_date"`
+	GeneratedDate     time.Time        `json:"generated_date"`
+	QualityChecks     []QualityCheck   `json:"quality_checks"`  // List of quality checks included in the report
+	OverallStatus     string           `json:"overall_status"`  // Overall status of quality checks (e.g., Passed, Failed, Mixed)
+	Comments          string           `json:"comments"`        // General comments on the report
+	AttachedDocuments []Document       `json:"attached_documents"` // Any related documents
+}
