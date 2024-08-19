@@ -15,6 +15,99 @@ func NewTaskController(service TaskService) *TaskController {
 	return &TaskController{service}
 }
 
+
+func (t *TaskController) TaskMarkAsInProgress(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	taskID, err := utils.ParseInt64Param(r)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
+			"status":  "error",
+			"message": "Invalid task ID: " + err.Error(),
+		})
+		return
+	}
+
+	err = t.Service.TaskMarkAsInProgress(ctx, taskID)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": "Failed to mark task as in progress: " + err.Error(),
+		})
+		return
+	}
+
+	utils.JSONResponse(w, http.StatusOK, map[string]interface{}{
+		"status":  "success",
+		"message": "Task marked as in progress successfully",
+	})
+}
+
+func (t *TaskController) FindOverdueTasks(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	tasks, err := t.Service.FindOverdueTasks(ctx)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": "Failed to retrieve overdue tasks: " + err.Error(),
+		})
+		return
+	}
+
+	utils.JSONResponse(w, http.StatusOK, map[string]interface{}{
+		"status":  "success",
+		"message": "Overdue tasks found successfully",
+		"data":    tasks,
+	})
+}
+
+func (t *TaskController) FindTasksByAssignedUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userID, err := utils.ParseInt64Param(r)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
+			"status":  "error",
+			"message": "Invalid user ID: " + err.Error(),
+		})
+		return
+	}
+
+	tasks, err := t.Service.FindTasksByAssignedUser(ctx, userID)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": "Failed to retrieve tasks for user: " + err.Error(),
+		})
+		return
+	}
+
+	utils.JSONResponse(w, http.StatusOK, map[string]interface{}{
+		"status":  "success",
+		"message": "Tasks found successfully",
+		"data":    tasks,
+	})
+}
+
+func (t *TaskController) ArchiveCompletedTasks(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	err := t.Service.ArchiveCompletedTasks(ctx)
+	if err != nil {
+		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
+			"status":  "error",
+			"message": "Failed to archive completed tasks: " + err.Error(),
+		})
+		return
+	}
+
+	utils.JSONResponse(w, http.StatusOK, map[string]interface{}{
+		"status":  "success",
+		"message": "Completed tasks archived successfully",
+	})
+}
+
 func (t *TaskController) TaskMarkAsDone(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

@@ -13,12 +13,59 @@ type TaskService interface {
 	UpdateTask(ctx context.Context, task *models.Task) error
 	DeleteTask(ctx context.Context, id int64) error
 	TaskMarkAsDone(ctx context.Context, id int64) error
+	ArchiveCompletedTasks(ctx context.Context) error
+	TaskMarkAsInProgress(ctx context.Context, id int64) error
+	FindTasksByAssignedUser(ctx context.Context, userID int64) ([]models.Task, error)
+	FindOverdueTasks(ctx context.Context) ([]models.Task, error)
 }
 
 type taskService struct {
 	TaskRepo TaskRepository
 }
 
+
+func NewTaskService(taskRepo TaskRepository) TaskService {
+	return &taskService{taskRepo}
+}
+
+func (t *taskService) FindOverdueTasks(ctx context.Context) ([]models.Task, error) {
+	tasks, err := t.TaskRepo.FindOverdueTasks(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve overdue tasks: %v", err)
+	}
+
+	return tasks, nil
+}
+
+func (t *taskService) FindTasksByAssignedUser(ctx context.Context, userID int64) ([]models.Task, error){
+	tasks, err := t.TaskRepo.FindTasksByAssignedUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve tasks for user: %v", err)
+	}
+
+	return tasks, nil
+}
+
+func (t *taskService) ArchiveCompletedTasks(ctx context.Context) error {
+	err := t.TaskRepo.ArchiveCompletedTasks(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to archive completed tasks: %v", err)
+	}
+
+	return nil
+}
+
+func (t *taskService) TaskMarkAsInProgress(ctx context.Context, id int64) error {
+	if id <= 0 {
+		return fmt.Errorf("invalid task ID")
+	}
+	err := t.TaskRepo.TaskMarkAsInProgress(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to mark task as in progress: %v", err)
+	}
+
+	return nil
+}
 func (t *taskService) TaskMarkAsDone(ctx context.Context, id int64) error {
 
 	if id <= 0 {
@@ -32,9 +79,6 @@ func (t *taskService) TaskMarkAsDone(ctx context.Context, id int64) error {
 	return nil
 }
 
-func NewTaskService(taskRepo TaskRepository) TaskService {
-	return &taskService{taskRepo}
-}
 
 func (t *taskService) ShowAllTasks(ctx context.Context) ([]models.Task, error) {
 	tasks, err := t.TaskRepo.ShowAllTasks(ctx)
