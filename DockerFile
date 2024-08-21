@@ -1,0 +1,40 @@
+# Gunakan golang image sebagai base image
+FROM golang:1.20-alpine as builder
+
+# Set environment variables
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+# Buat direktori kerja
+WORKDIR /app
+
+# Copy seluruh file go.mod dan go.sum ke direktori kerja
+COPY go.mod go.sum ./
+
+# Download dependensi yang diperlukan
+RUN go mod download
+
+# Copy semua kode sumber ke direktori kerja
+COPY . .
+
+# Build aplikasi
+RUN go build -o /app/main .
+
+# Build tahap kedua untuk image final yang lebih kecil
+FROM alpine:3.18
+
+# Buat direktori untuk aplikasi
+WORKDIR /app
+
+# Copy executable dari stage sebelumnya
+COPY --from=builder /app/main /app/main
+
+# Set executable permission
+RUN chmod +x /app/main
+
+# Expose port yang digunakan oleh aplikasi
+EXPOSE 8080
+
+# Jalankan aplikasi
+CMD ["/app/main"]
