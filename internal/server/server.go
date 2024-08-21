@@ -2,12 +2,14 @@ package server
 
 import (
 	"database/sql"
+	"net/http"
+
 	"github.com/BerkatPS/internal/auth"
+	"github.com/BerkatPS/internal/expense"
 	"github.com/BerkatPS/internal/project"
 	"github.com/BerkatPS/internal/quality"
 	"github.com/BerkatPS/internal/task"
 	"github.com/BerkatPS/pkg/middleware"
-	"net/http"
 )
 
 type Server struct {
@@ -50,6 +52,10 @@ func (s *Server) registerRoutes() {
 	project.RegisterRoutes(s.Router, projectController)
 
 	// expenses routes
+	expenseRepo := expense.NewExpenseRepository(s.db)
+	expenseService := expense.NewExpenseService(expenseRepo)
+	expenseController := expense.NewExpenseController(expenseService)
+	expense.RegisterRoutes(s.Router, expenseController)
 
 	// Document routes
 
