@@ -12,6 +12,4 @@ func RegisterRoutes(router *http.ServeMux, handler *ExpenseController) {
 	router.HandleFunc("GET /expenses/total/{projectID}", handler.GetTotalExpensesByProjectID)
 	router.HandleFunc("GET /expenses/status", handler.GetExpensesByStatus)
 	router.HandleFunc("GET /expenses/project", handler.GetExpensesByProjectID)
-	
-	
 }
