@@ -5,6 +5,10 @@ import (
 	"os"
 )
 
+var AllowedIPs = []string{
+	"180.242.131.151",
+}
+
 type Config struct {
 	ServerAddress string
 	DatabaseURL   string
@@ -28,3 +32,5 @@ func getEnv(key, defaultValue string) string {
 
 	return value
 }
+
+
