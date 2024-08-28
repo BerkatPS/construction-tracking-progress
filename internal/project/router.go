@@ -8,7 +8,7 @@ func RegisterRoutes(router *http.ServeMux, handler *ProjectController) {
 	router.HandleFunc("POST /projects/add", handler.CreateProject)
 	router.HandleFunc("PUT /projects/{id}", handler.UpdateProject)
 	router.HandleFunc("DELETE /projects/{id}", handler.DeleteProject)
-	router.HandleFunc("GET /projects/status/{status}", handler.FindProjectsByStatus)
+    router.HandleFunc("GET /projects/status-code/{status}", handler.FindProjectsByStatus) 
 	router.HandleFunc("PUT /projects/{id}/status/{status}", handler.UpdateProjectStatus)
 	router.HandleFunc("POST /projects/{id}/team/{user_id}", handler.AddTeamMemberToProject)
 	router.HandleFunc("DELETE /projects/{id}/team/{user_id}", handler.RemoveTeamMemberFromProject)
