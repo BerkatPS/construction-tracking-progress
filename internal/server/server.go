@@ -9,6 +9,7 @@ import (
 	"github.com/BerkatPS/internal/project"
 	"github.com/BerkatPS/internal/quality"
 	"github.com/BerkatPS/internal/task"
+	"github.com/BerkatPS/pkg/config"
 	"github.com/BerkatPS/pkg/middleware"
 )
 
@@ -23,12 +24,8 @@ func NewServer(db *sql.DB) *Server {
 		Router: router,
 		db:     db,
 	}
-
-	//router.Use(middleware.LoggingMiddleware)
-	//router.Use(middleware.RecoveryMiddleware)
-	//router.Use(middleware.CORSHandler)
-	//router.Use(middleware.AuthMiddleware)
-
+	
+	s.applyMiddleware()
 	s.registerRoutes()
 
 	router.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
@@ -83,14 +80,17 @@ func (s *Server) registerRoutes() {
 
 }
 
-func (s *Server) applyMiddleware(h http.Handler) http.Handler {
-	return middleware.LoggingMiddleware(
-		middleware.RecoveryMiddleware(
-			middleware.CORSHandler(
-				middleware.AuthMiddleware(h),
-			),
-		),
-	)
+func (s *Server) applyMiddleware() {
+    // Apply middleware to all routes
+    s.Router.Handle("/", middleware.IPMiddleware(config.AllowedIPs)(
+        middleware.LoggingMiddleware(
+            middleware.RecoveryMiddleware(
+                middleware.CORSHandler(
+                    middleware.AuthMiddleware(s.Router),
+                ),
+            ),
+        ),
+    ))
 }
 
 // exampleHandler is an example of a simple route handler
