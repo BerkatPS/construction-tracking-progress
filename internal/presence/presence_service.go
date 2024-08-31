@@ -3,7 +3,9 @@ package presence
 import (
 	"context"
 	"errors"
+	"fmt"
 	models "github.com/BerkatPS/internal"
+	"time"
 )
 
 type PresenceService interface {
@@ -51,6 +53,18 @@ func (p *presenceService) CreatePresence(ctx context.Context, presence *models.P
 	if presence.Status == "" {
 		return errors.New("status is required")
 	}
+
+	today := time.Now().Format("2006-01-02")
+
+	existingPresence, err := p.presenceRepository.FindPresenceByUserIDAndDate(ctx, presence.UserID, today)
+	if err != nil {
+		return fmt.Errorf("failed to check if presence already exists: %w", err)
+	}
+
+	if existingPresence != nil {
+		return errors.New("presence already exists")
+	}
+	presence.Date = time.Now()
 	return p.presenceRepository.CreatePresence(ctx, presence)
 }
 
