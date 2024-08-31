@@ -17,6 +17,19 @@ type User struct {
 	ConductedQualityChecks  []QualityCheck   `json:"conducted_quality_checks"`  // One-to-Many
 	ReportedSafetyIncidents []SafetyIncident `json:"reported_safety_incidents"` // One-to-Many
 	CreatedReports          []Report         `json:"created_reports"`           // One-to-Many
+	Presences               []Presence       `json:"presences"`                 // One-to-Many relationship with Presence
+
+}
+
+type Presence struct {
+	ID        int64     `json:"id"`
+	UserID    int64     `json:"user_id"`
+	ProjectID int64     `json:"project_id"`
+	Status    string    `json:"status"`
+	Comments  string    `json:"comments"`
+	Date      time.Time `json:"date"`
+	Project   *Project  `json:"project"` // many to one relation with project
+	User      *User     `json:"user"`    // many to one relation with user
 }
 
 type Project struct {
@@ -34,6 +47,7 @@ type Project struct {
 	QualityChecks   []QualityCheck   `json:"quality_checks"`   // One-to-Many
 	SafetyIncidents []SafetyIncident `json:"safety_incidents"` // One-to-Many
 	Reports         []Report         `json:"reports"`          // One-to-Many
+	Presences       []Presence       `json:"presences"`        // One-to-Many relationship with Presence
 }
 
 type Task struct {
@@ -117,18 +131,18 @@ type Report struct {
 }
 
 type QualityReport struct {
-	ID                int64            `json:"id"`
-	ProjectID         int64            `json:"project_id"`
-	InspectorID       int64            `json:"inspector_id"`
-	GeneratedByID     int64            `json:"generated_by_id"`
-	GeneratedBy       *User            `json:"generated_by"` // Many-to-One
-	Project           *Project         `json:"project"`      // Many-to-One
-	Inspector         *User            `json:"inspector"`    // Many-to-One
-	StartDate         time.Time        `json:"start_date"`
-	EndDate           time.Time        `json:"end_date"`
-	GeneratedDate     time.Time        `json:"generated_date"`
-	QualityChecks     []QualityCheck   `json:"quality_checks"`  // List of quality checks included in the report
-	OverallStatus     string           `json:"overall_status"`  // Overall status of quality checks (e.g., Passed, Failed, Mixed)
-	Comments          string           `json:"comments"`        // General comments on the report
-	AttachedDocuments []Document       `json:"attached_documents"` // Any related documents
+	ID                int64          `json:"id"`
+	ProjectID         int64          `json:"project_id"`
+	InspectorID       int64          `json:"inspector_id"`
+	GeneratedByID     int64          `json:"generated_by_id"`
+	GeneratedBy       *User          `json:"generated_by"` // Many-to-One
+	Project           *Project       `json:"project"`      // Many-to-One
+	Inspector         *User          `json:"inspector"`    // Many-to-One
+	StartDate         time.Time      `json:"start_date"`
+	EndDate           time.Time      `json:"end_date"`
+	GeneratedDate     time.Time      `json:"generated_date"`
+	QualityChecks     []QualityCheck `json:"quality_checks"`     // List of quality checks included in the report
+	OverallStatus     string         `json:"overall_status"`     // Overall status of quality checks (e.g., Passed, Failed, Mixed)
+	Comments          string         `json:"comments"`           // General comments on the report
+	AttachedDocuments []Document     `json:"attached_documents"` // Any related documents
 }
