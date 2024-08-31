@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"github.com/BerkatPS/internal/presence"
 	"net/http"
 
 	"github.com/BerkatPS/internal/auth"
@@ -24,7 +25,7 @@ func NewServer(db *sql.DB) *Server {
 		Router: router,
 		db:     db,
 	}
-	
+
 	s.applyMiddleware()
 	s.registerRoutes()
 
@@ -47,13 +48,17 @@ func (s *Server) registerRoutes() {
 	projectService := project.NewProjectService(projectRepo)
 	projectController := project.NewProjectController(projectService)
 	project.RegisterRoutes(s.Router, projectController)
-
 	// expenses routes
 	expenseRepo := expense.NewExpenseRepository(s.db)
 	expenseService := expense.NewExpenseService(expenseRepo)
 	expenseController := expense.NewExpenseController(expenseService)
 	expense.RegisterRoutes(s.Router, expenseController)
 
+	//presence routes
+	presenceRepo := presence.NewPresenceRepository(s.db)
+	presenceService := presence.NewPresenceService(presenceRepo)
+	presenceController := presence.NewPresenceController(presenceService)
+	presence.RegisterRoutes(s.Router, presenceController)
 	// Document routes
 
 	// Project routes
@@ -81,16 +86,16 @@ func (s *Server) registerRoutes() {
 }
 
 func (s *Server) applyMiddleware() {
-    // Apply middleware to all routes
-    s.Router.Handle("/", middleware.IPMiddleware(config.AllowedIPs)(
-        middleware.LoggingMiddleware(
-            middleware.RecoveryMiddleware(
-                middleware.CORSHandler(
-                    middleware.AuthMiddleware(s.Router),
-                ),
-            ),
-        ),
-    ))
+	// Apply middleware to all routes
+	s.Router.Handle("/", middleware.IPMiddleware(config.AllowedIPs)(
+		middleware.LoggingMiddleware(
+			middleware.RecoveryMiddleware(
+				middleware.CORSHandler(
+					middleware.AuthMiddleware(s.Router),
+				),
+			),
+		),
+	))
 }
 
 // exampleHandler is an example of a simple route handler
