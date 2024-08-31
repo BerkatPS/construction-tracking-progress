@@ -34,6 +34,7 @@ func main() {
 		&models.Task{},
 		&models.Message{},
 		&models.Report{},
+		&models.Presence{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
