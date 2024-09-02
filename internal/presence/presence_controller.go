@@ -117,16 +117,17 @@ func (p *PresenceController) CreatePresence(w http.ResponseWriter, r *http.Reque
 
 func (p *PresenceController) UpdatePresence(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	var presence models.Presence
-	if err := json.NewDecoder(r.Body).Decode(&presence); err != nil {
+	presence, err := utils.ParseInt64Param(r)
+	if err != nil {
 		utils.JSONErrorResponse(w, http.StatusBadRequest, map[string]interface{}{
 			"status":  "error",
-			"message": "Invalid presence data: " + err.Error(),
+			"message": "Invalid presence ID: " + err.Error(),
 		})
 		return
 	}
 
-	if err := p.presenceService.UpdatePresence(ctx, &presence); err != nil {
+	var presenceUpdate models.Presence
+	if err := p.presenceService.UpdatePresence(ctx, &presenceUpdate); err != nil {
 		utils.JSONErrorResponse(w, http.StatusInternalServerError, map[string]interface{}{
 			"status":  "error",
 			"message": "Failed to update presence: " + err.Error(),
